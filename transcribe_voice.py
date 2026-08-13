@@ -37,7 +37,7 @@ def record_audio():
                         input=True,
                         frames_per_buffer=CHUNK)
     
-    print("Recording... (Press Ctrl+Shift+V again to stop)")
+    print("Recording... (Press Ctrl+Space again to stop)")
     
     while is_recording:
         data = stream.read(CHUNK)
@@ -95,11 +95,11 @@ def stop_recording():
         threading.Thread(target=process_transcription).start()
 
 # Set up hotkey
-# Using 'ctrl+shift+v' as a default. 
+# Using 'ctrl+space' as a default. 
 # You can change this to any combination.
-keyboard.add_hotkey('ctrl+shift+v', lambda: start_recording() if not is_recording else stop_recording())
+keyboard.add_hotkey('ctrl+space', lambda: start_recording() if not is_recording else stop_recording())
 
-print("Utility is running. Press Ctrl+Shift+V to start/stop recording.")
+print("Utility is running. Press Ctrl+Space to start/stop recording.")
 print("Press 'Esc' to exit.")
 
 try:
