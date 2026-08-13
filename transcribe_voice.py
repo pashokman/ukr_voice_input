@@ -3,7 +3,7 @@ import threading
 import queue
 import time
 import numpy as np
-import whisper
+from faster_whisper import WhisperModel
 import pyaudio
 import keyboard
 from pynput.keyboard import Controller
@@ -21,9 +21,10 @@ transcription_queue = queue.Queue()
 is_recording = False
 recording_data = []
 
-# Initialize Whisper model
-print(f"Loading Whisper model '{MODEL_NAME}'... Please wait.")
-model = whisper.load_model(MODEL_NAME)
+# Initialize Faster Whisper model
+print(f"Loading Faster Whisper model '{MODEL_NAME}'... Please wait.")
+# Використовуємо device="cpu" та compute_type="int8" для максимальної швидкості на процесорі
+model = WhisperModel(MODEL_NAME, device="cpu", compute_type="int8")
 print("Model loaded.")
 
 audio = pyaudio.PyAudio()
@@ -56,9 +57,11 @@ def process_transcription():
             break
         
         print("Transcribing...")
-        # Додано fp16=False, щоб прибрати Warning на CPU
-        result = model.transcribe(audio_data, language="uk", fp16=False)
-        text = result["text"].strip()
+        # faster-whisper повертає генератор сегментів та інформацію
+        segments, info = model.transcribe(audio_data, language="uk")
+        
+        # Збираємо весь текст з отриманих сегментів
+        text = "".join([segment.text for segment in segments]).strip()
         
         if text:
             print(f"Result: {text}")

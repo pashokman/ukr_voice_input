@@ -1,8 +1,5 @@
-openai-whisper
+faster-whisper
 pyaudio
 keyboard
 pynput
 numpy
-torch
-torchaudio
-FFmpeg
