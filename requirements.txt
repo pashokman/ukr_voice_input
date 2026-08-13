@@ -1,0 +1,8 @@
+openai-whisper
+pyaudio
+keyboard
+pynput
+numpy
+torch
+torchaudio
+FFmpeg
