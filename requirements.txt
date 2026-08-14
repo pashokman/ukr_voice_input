@@ -3,3 +3,6 @@ pyaudio
 keyboard
 pynput
 numpy
+pystray
+Pillow
+pyinstaller
