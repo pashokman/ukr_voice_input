@@ -116,6 +116,7 @@ def process_transcription_worker():
 
 
 def type_text(text):
+    # Чекаємо, поки користувач відпустить Ctrl або Space
     while keyboard.is_pressed("ctrl") or keyboard.is_pressed("space"):
         time.sleep(0.02)
 
@@ -128,9 +129,11 @@ def type_text(text):
 
     try:
         pyperclip.copy(text)
-        with keyboard_controller.pressed(Key.ctrl):
-            keyboard_controller.press("v")
-            keyboard_controller.release("v")
+        time.sleep(0.05)  # Невеликий затримка, щоб буфер обміну встиг оновитися
+
+        # Використовуємо модуль keyboard замість pynput
+        keyboard.send("ctrl+v")
+
         time.sleep(0.1)
     finally:
         try:
@@ -152,7 +155,6 @@ def toggle_recording():
 def open_history_window():
     global history_window
 
-    # Якщо вікно вже відкрите — просто виводимо його на передній план
     if history_window is not None and tk.Toplevel.winfo_exists(history_window):
         history_window.lift()
         history_window.focus_force()
@@ -162,42 +164,67 @@ def open_history_window():
     history_window.title("Історія транскрибації")
     history_window.geometry("650x400")
 
+    # Спочатку пакуємо панель з кнопками знизу, щоб вона НІКОЛИ не зникала
+    btn_frame = ttk.Frame(history_window, padding=10)
+    btn_frame.pack(side=tk.BOTTOM, fill=tk.X)
+
+    # Панель для текстового поля займає весь залишковий простір
+    frame = ttk.Frame(history_window, padding=10)
+    frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+
+    scrollbar = ttk.Scrollbar(frame, orient=tk.VERTICAL)
+    text_area = tk.Text(
+        frame,
+        wrap=tk.WORD,  # Автоматичний перенос слів
+        yscrollcommand=scrollbar.set,
+        font=("Consolas", 10),
+        cursor="arrow",
+    )
+    scrollbar.config(command=text_area.yview)
+
+    scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+    text_area.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+    # Функція копіювання
     def copy_selected(event=None):
         try:
-            selection = listbox.curselection()
-            if not selection:
+            # 1. Якщо є виділений мишкою текст — копіюємо його
+            selected_text = text_area.get(tk.SEL_FIRST, tk.SEL_LAST).strip()
+        except tk.TclError:
+            selected_text = None
+
+        if not selected_text:
+            # 2. Якщо тексту не виділено, але є клацнутий рядок (наприклад, подвійний клік)
+            try:
+                line_index = text_area.index("insert linestart")
+                line_end = text_area.index("insert lineend")
+                selected_text = text_area.get(line_index, line_end).strip()
+            except Exception:
                 return
-            selected_text = listbox.get(selection[0])
-            clean_text = selected_text[22:] if len(selected_text) > 22 else selected_text
+
+        if selected_text:
+            # Видаляємо часову мітку [YYYY-MM-DD HH:MM:SS], якщо вона є на початку
+            clean_text = (
+                selected_text[22:] if len(selected_text) > 22 and selected_text.startswith("[") else selected_text
+            )
             pyperclip.copy(clean_text)
 
             history_window.title("Історія транскрибації — [Скопійовано!]")
             history_window.after(1500, lambda: history_window.title("Історія транскрибації"))
-        except (tk.TclError, Exception):
-            pass
 
     def clear_logs():
         if messagebox.askyesno("Підтвердження", "Очистити всі збережені логи?", parent=history_window):
             if os.path.exists(LOG_FILE):
                 open(LOG_FILE, "w", encoding="utf-8").close()
-            listbox.delete(0, tk.END)
+            text_area.config(state=tk.NORMAL)
+            text_area.delete("1.0", tk.END)
+            text_area.config(state=tk.DISABLED)
 
-    frame = ttk.Frame(history_window, padding=10)
-    frame.pack(fill=tk.BOTH, expand=True)
+    # Подвійне клацання мишкою копіює весь рядок
+    text_area.bind("<Double-Button-1>", copy_selected)
 
-    scrollbar = ttk.Scrollbar(frame, orient=tk.VERTICAL)
-    listbox = tk.Listbox(
-        frame,
-        yscrollcommand=scrollbar.set,
-        selectmode=tk.SINGLE,
-        font=("Consolas", 10),
-    )
-    scrollbar.config(command=listbox.yview)
-
-    scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-    listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-
-    listbox.bind("<Double-Button-1>", copy_selected)
+    # Робимо текстове поле нередагованим
+    text_area.config(state=tk.DISABLED)
 
     last_file_position = [0]
 
@@ -218,9 +245,13 @@ def open_history_window():
                     new_lines = f.readlines()
                     last_file_position[0] = f.tell()
 
-                    for line in new_lines:
-                        if line.strip():
-                            listbox.insert(0, line.strip())
+                    if new_lines:
+                        text_area.config(state=tk.NORMAL)
+                        for line in new_lines:
+                            if line.strip():
+                                # Вставляємо новий запис на початок вікна
+                                text_area.insert("1.0", line.strip() + "\n\n")
+                        text_area.config(state=tk.DISABLED)
             except Exception:
                 pass
 
@@ -228,9 +259,7 @@ def open_history_window():
 
     check_for_new_logs()
 
-    btn_frame = ttk.Frame(history_window, padding=10)
-    btn_frame.pack(fill=tk.X)
-
+    # Кнопки
     copy_btn = ttk.Button(btn_frame, text="Копіювати текст", command=copy_selected)
     copy_btn.pack(side=tk.LEFT, padx=5)
 
@@ -239,7 +268,6 @@ def open_history_window():
 
 
 def show_history_from_tray(icon, item):
-    # Безпечно передаємо виклик відкриття вікна в головний потік Tkinter
     if root:
         root.after(0, open_history_window)
 
@@ -268,12 +296,10 @@ menu = pystray.Menu(
 
 icon = pystray.Icon("voice_transcriber", icon_image, "Голосове введення", menu)
 
-# Запускаємо pystray у фоновому потоці
 tray_thread = threading.Thread(target=icon.run, daemon=True)
 tray_thread.start()
 
 if __name__ == "__main__":
-    # Головний потік віддаємо для Tkinter (приховане root-вікно)
     root = tk.Tk()
-    root.withdraw()  # Ховаємо головне порожнє вікно
+    root.withdraw()
     root.mainloop()
