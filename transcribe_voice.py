@@ -1,27 +1,36 @@
+import os
+import queue
 import sys
 import threading
-import queue
 import time
-import numpy as np
+import tkinter as tk
+from tkinter import messagebox, ttk
+
 from faster_whisper import WhisperModel
-import pyaudio
 import keyboard
+import numpy as np
+
+import PIL.Image
+import PIL.ImageDraw
 from pynput.keyboard import Controller, Key
-import pystray
-from PIL import Image, ImageDraw
 import pyperclip
+import pyaudio
+import pystray
 
 # --- Configuration ---
-MODEL_NAME = "medium"  # може бути змінено на "small", зменшує споживання на 1.2GB RAM
+MODEL_NAME = "medium"
 SAMPLE_RATE = 16000
 CHUNK = 1024
 FORMAT = pyaudio.paInt16
-CPU_THREADS = 8  # має бути меншим або рівним кількості ядер CPU
+CPU_THREADS = 8
+LOG_FILE = "transcriptions.log"
 
 transcription_queue = queue.Queue()
 is_recording = False
+root = None  # Глобальний екземпляр Tkinter
+history_window = None  # Посилання на вікно історії
 
-# Завантаження моделі з оборобкою на CPU
+# Завантаження моделі з обробкою на CPU
 print(f"Loading Faster Whisper model '{MODEL_NAME}'...")
 model = WhisperModel(MODEL_NAME, device="cpu", compute_type="int8", cpu_threads=CPU_THREADS)
 print("Model loaded.")
@@ -30,17 +39,30 @@ audio = pyaudio.PyAudio()
 keyboard_controller = Controller()
 
 
+def log_transcription(text):
+    """Зберігає розпізнаний текст у файл із позначкою часу."""
+    timestamp = time.strftime("[%Y-%m-%d %H:%M:%S]")
+    entry = f"{timestamp} {text}\n"
+    with open(LOG_FILE, "a", encoding="utf-8") as f:
+        f.write(entry)
+
+
 def create_tray_icon(color=(0, 122, 255)):
-    """Створює просту круглу іконку для трею."""
-    image = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
-    dc = ImageDraw.Draw(image)
+    image = PIL.Image.new("RGBA", (64, 64), (0, 0, 0, 0))
+    dc = PIL.ImageDraw.Draw(image)
     dc.ellipse((8, 8, 56, 56), fill=color)
     return image
 
 
 def record_audio():
     global is_recording
-    stream = audio.open(format=FORMAT, channels=1, rate=SAMPLE_RATE, input=True, frames_per_buffer=CHUNK)
+    stream = audio.open(
+        format=FORMAT,
+        channels=1,
+        rate=SAMPLE_RATE,
+        input=True,
+        frames_per_buffer=CHUNK,
+    )
 
     local_frames = []
     while is_recording:
@@ -60,7 +82,6 @@ def record_audio():
 
 
 def process_transcription_worker():
-    """Фоновий потік, який постійно чекає на нові аудіозаписи з черги."""
     while True:
         audio_data = transcription_queue.get()
         if audio_data is None:
@@ -70,18 +91,22 @@ def process_transcription_worker():
             segments, info = model.transcribe(
                 audio_data,
                 language="uk",
-                beam_size=1,  # Прискорює обробку на CPU в 2-3 рази
+                beam_size=1,
                 condition_on_previous_text=False,
-                vad_filter=True,  # Відтинає тишу до того, як вона потрапить у нейромережу
+                vad_filter=True,
                 vad_parameters=dict(
-                    min_silence_duration_ms=500,  # Швидше відсікає паузу в кінці вашої фрази
-                    speech_pad_ms=300,  # Мінімальний відступ навколо слів, зменшення може призводити до обрізання тексту перед або після запису
+                    min_silence_duration_ms=500,
+                    speech_pad_ms=300,
                 ),
-                max_new_tokens=128,  # Не дає моделі генерувати довгі тексти при галюцинаціях
-                initial_prompt="QA, Python, Git, Pull Request, commit, deploy, bug report, API, framework, microservices, database, SQL, Docker.",
+                max_new_tokens=128,
+                initial_prompt=(
+                    "QA, Python, Git, Pull Request, commit, deploy, bug report, API,"
+                    " framework, microservices, database, SQL, Docker."
+                ),
             )
             text = "".join([segment.text for segment in segments]).strip()
             if text:
+                log_transcription(text)
                 type_text(text)
                 del audio_data
         except Exception as e:
@@ -91,32 +116,27 @@ def process_transcription_worker():
 
 
 def type_text(text):
-    # Чекаємо відпускання Ctrl та Space, щоб вони не заважали комбінації Ctrl+V
     while keyboard.is_pressed("ctrl") or keyboard.is_pressed("space"):
         time.sleep(0.02)
 
     time.sleep(0.05)
 
-    # Зберігаємо попередній вміст буфера обміну (опціонально)
     try:
         old_clip = pyperclip.paste()
     except Exception:
         old_clip = ""
 
     try:
-        # Копіюємо розпізнаний текст у буфер
         pyperclip.copy(text)
-
-        # Емулюємо натискання Ctrl+V для вставки
         with keyboard_controller.pressed(Key.ctrl):
             keyboard_controller.press("v")
             keyboard_controller.release("v")
-
-        # Невелика пауза, щоб програма встигла обробити вставку
         time.sleep(0.1)
     finally:
-        # Відновлюємо попередній вміст буфера обміну
-        pyperclip.copy(old_clip)
+        try:
+            pyperclip.copy(old_clip)
+        except Exception:
+            pass
 
 
 def toggle_recording():
@@ -128,29 +148,132 @@ def toggle_recording():
         is_recording = False
 
 
-# Запускаємо фоновий потік для обробки
-transcribe_thread = threading.Thread(target=process_transcription_worker, daemon=True)
-transcribe_thread.start()
+# --- GUI для логів ---
+def open_history_window():
+    global history_window
 
-# Реєстрація гарячої клавіші з пригніченням стандартного сигналу (suppress=True)
-keyboard.add_hotkey("ctrl+space", toggle_recording, suppress=True)
+    # Якщо вікно вже відкрите — просто виводимо його на передній план
+    if history_window is not None and tk.Toplevel.winfo_exists(history_window):
+        history_window.lift()
+        history_window.focus_force()
+        return
+
+    history_window = tk.Toplevel(root)
+    history_window.title("Історія транскрибації")
+    history_window.geometry("650x400")
+
+    def copy_selected(event=None):
+        try:
+            selection = listbox.curselection()
+            if not selection:
+                return
+            selected_text = listbox.get(selection[0])
+            clean_text = selected_text[22:] if len(selected_text) > 22 else selected_text
+            pyperclip.copy(clean_text)
+
+            history_window.title("Історія транскрибації — [Скопійовано!]")
+            history_window.after(1500, lambda: history_window.title("Історія транскрибації"))
+        except (tk.TclError, Exception):
+            pass
+
+    def clear_logs():
+        if messagebox.askyesno("Підтвердження", "Очистити всі збережені логи?", parent=history_window):
+            if os.path.exists(LOG_FILE):
+                open(LOG_FILE, "w", encoding="utf-8").close()
+            listbox.delete(0, tk.END)
+
+    frame = ttk.Frame(history_window, padding=10)
+    frame.pack(fill=tk.BOTH, expand=True)
+
+    scrollbar = ttk.Scrollbar(frame, orient=tk.VERTICAL)
+    listbox = tk.Listbox(
+        frame,
+        yscrollcommand=scrollbar.set,
+        selectmode=tk.SINGLE,
+        font=("Consolas", 10),
+    )
+    scrollbar.config(command=listbox.yview)
+
+    scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+    listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+    listbox.bind("<Double-Button-1>", copy_selected)
+
+    last_file_position = [0]
+
+    def check_for_new_logs():
+        if not tk.Toplevel.winfo_exists(history_window):
+            return
+
+        if os.path.exists(LOG_FILE):
+            try:
+                with open(LOG_FILE, "r", encoding="utf-8") as f:
+                    f.seek(0, os.SEEK_END)
+                    file_size = f.tell()
+
+                    if file_size < last_file_position[0]:
+                        last_file_position[0] = 0
+
+                    f.seek(last_file_position[0])
+                    new_lines = f.readlines()
+                    last_file_position[0] = f.tell()
+
+                    for line in new_lines:
+                        if line.strip():
+                            listbox.insert(0, line.strip())
+            except Exception:
+                pass
+
+        history_window.after(1000, check_for_new_logs)
+
+    check_for_new_logs()
+
+    btn_frame = ttk.Frame(history_window, padding=10)
+    btn_frame.pack(fill=tk.X)
+
+    copy_btn = ttk.Button(btn_frame, text="Копіювати текст", command=copy_selected)
+    copy_btn.pack(side=tk.LEFT, padx=5)
+
+    clear_btn = ttk.Button(btn_frame, text="Очистити історію", command=clear_logs)
+    clear_btn.pack(side=tk.RIGHT, padx=5)
+
+
+def show_history_from_tray(icon, item):
+    # Безпечно передаємо виклик відкриття вікна в головний потік Tkinter
+    if root:
+        root.after(0, open_history_window)
 
 
 def on_exit(icon, item):
     icon.stop()
     transcription_queue.put(None)
     audio.terminate()
-    sys.exit(0)
+    if root:
+        root.after(0, root.destroy)
 
+
+# --- Запуск програмних потоків ---
+transcribe_thread = threading.Thread(target=process_transcription_worker, daemon=True)
+transcribe_thread.start()
+
+keyboard.add_hotkey("ctrl+space", toggle_recording, suppress=True)
 
 # Створення меню в треї
 icon_image = create_tray_icon()
 menu = pystray.Menu(
     pystray.MenuItem("Voice Transcriber (Ctrl+Space)", None, enabled=False),
+    pystray.MenuItem("Історія записів", show_history_from_tray),
     pystray.MenuItem("Вихід", on_exit),
 )
 
 icon = pystray.Icon("voice_transcriber", icon_image, "Голосове введення", menu)
 
+# Запускаємо pystray у фоновому потоці
+tray_thread = threading.Thread(target=icon.run, daemon=True)
+tray_thread.start()
+
 if __name__ == "__main__":
-    icon.run()
+    # Головний потік віддаємо для Tkinter (приховане root-вікно)
+    root = tk.Tk()
+    root.withdraw()  # Ховаємо головне порожнє вікно
+    root.mainloop()
