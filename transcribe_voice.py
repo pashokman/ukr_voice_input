@@ -12,16 +12,16 @@ from PIL import Image, ImageDraw
 import pyperclip
 
 # --- Configuration ---
-MODEL_NAME = "medium"  # can be changed to "small", saves about 1.2Gb of RAM
+MODEL_NAME = "medium"  # може бути змінено на "small", зменшує споживання на 1.2GB RAM
 SAMPLE_RATE = 16000
 CHUNK = 1024
 FORMAT = pyaudio.paInt16
-CPU_THREADS = 8  # should be less or equal to max cores count (not threads count)
+CPU_THREADS = 8  # має бути меншим або рівним кількості ядер CPU
 
 transcription_queue = queue.Queue()
 is_recording = False
 
-# Load model with CPU optimizations
+# Завантаження моделі з оборобкою на CPU
 print(f"Loading Faster Whisper model '{MODEL_NAME}'...")
 model = WhisperModel(MODEL_NAME, device="cpu", compute_type="int8", cpu_threads=CPU_THREADS)
 print("Model loaded.")
