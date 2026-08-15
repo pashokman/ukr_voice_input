@@ -1,6 +1,5 @@
 import os
 import queue
-import sys
 import threading
 import time
 import tkinter as tk
@@ -12,7 +11,7 @@ import numpy as np
 
 import PIL.Image
 import PIL.ImageDraw
-from pynput.keyboard import Controller, Key
+from pynput.keyboard import Controller
 import pyperclip
 import pyaudio
 import pystray
@@ -41,7 +40,7 @@ keyboard_controller = Controller()
 
 def log_transcription(text):
     """Зберігає розпізнаний текст у файл із позначкою часу."""
-    timestamp = time.strftime("[%Y-%m-%d %H:%M:%S]")
+    timestamp = time.strftime("[%H:%M:%S %d-%m-%Y]")
     entry = f"{timestamp} {text}\n"
     with open(LOG_FILE, "a", encoding="utf-8") as f:
         f.write(entry)
@@ -203,7 +202,7 @@ def open_history_window():
                 return
 
         if selected_text:
-            # Видаляємо часову мітку [YYYY-MM-DD HH:MM:SS], якщо вона є на початку
+            # Видаляємо часову мітку [HH:MM:SS DD-MM-YYYY], якщо вона є на початку
             clean_text = (
                 selected_text[22:] if len(selected_text) > 22 and selected_text.startswith("[") else selected_text
             )
