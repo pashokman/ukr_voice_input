@@ -1,9 +1,7 @@
 faster-whisper
 pyaudio
 keyboard
-pynput
 numpy
 pystray
 Pillow
-pyinstaller
 pyperclip
