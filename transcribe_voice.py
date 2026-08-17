@@ -405,7 +405,7 @@ if __name__ == "__main__":
         # Create system tray menu
         icon_image = load_tray_icon()
         menu = pystray.Menu(
-            pystray.MenuItem("Ukrainian Voice Transcriber (Ctrl+Space)", None, enabled=False),
+            pystray.MenuItem("Ukrainian Voice Input (Ctrl+Space)", None, enabled=False),
             pystray.MenuItem("Історія записів", show_history_from_tray),
             pystray.MenuItem("Вихід", on_exit),
         )

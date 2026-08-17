@@ -27,6 +27,15 @@ All other config params are the same for both models except TRANSCRIBE_SETTINGS.
 - **Глобальні гарячі клавіші:** Працює поверх будь-якої програми, яка має поле для введення.
 - **Швидкість та точність:** Оптимізовано під розпізнавання української мови.
 
+### Системні вимоги
+| Компонент | Мінімально | Рекомендовано |
+| :--- | :--- | :--- |
+| **Процесор (CPU)** | 4 ядра / 4 потоки | 6–8 ядер *(наприклад, Ryzen 5600 / i5-12400)* |
+| **Оперативна пам'ять** | 8 ГБ | 16 ГБ |
+| **Диск** | HDD | SSD |
+| **Мікрофон** | Будь-який | З шумозаглушенням |
+| **Інтернет** | Потрібен тільки при першому запуску *(для завантаження моделі)* |
+
 ### 🚀 Як запустити (Для розробників)
 1. Клонуйте репозиторій:
    ```bash
@@ -60,6 +69,15 @@ Yes, I know that more accurate models can be run on a GPU and will work faster. 
 - **100% Local**: Your voice data never leaves your computer. During the first start the program loads LLM model for the transcribation in `C:\Users\<User>\.cache\huggingface\hub\...`
 - **Global Hotkeys**: Works on top of any application that has an input field.
 - **Speed & Accuracy**: Optimized for Ukrainian speech recognition.
+
+### System requirements
+| Component | Minimum | Recommended |
+| :--- | :--- | :--- |
+| **Processor (CPU)** | 4 cores / 4 threads | 6–8 cores *(example, Ryzen 5600 / i5-12400)* |
+| **RAM** | 8 GB | 16 GB |
+| **Disk** | HDD | SSD |
+| **Microphone** | Any | With noise cancellation |
+| **Internet** | Required only on first launch *(to load the model)*|
 
 ### 🚀 How to Run (For Developers)
 1. Clone the repository:
