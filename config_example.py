@@ -3,6 +3,7 @@ SAMPLE_RATE = 16000
 CHUNK = 1024
 CPU_THREADS = 4  # CPU_THREADS can be changed to your current cpu core count (not threads count)
 LOG_FILE = "transcriptions.log"
+ERROR_LOG_FILE = "error_log.txt"
 
 # INITIAL_PROMPT can be changed to something related to your field of work. Mine is QA, so...
 INITIAL_PROMPT = (
