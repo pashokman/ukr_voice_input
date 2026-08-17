@@ -35,6 +35,7 @@
 - **100% Локально:** Ваші голосові дані не залишають ваш комп'ютер. При першому запуску програма завантажує необхідну модель з Hugging Face (`C:\Users\<User>\.cache\huggingface\hub\...`).
 - **Глобальні гарячі клавіші:** Працює поверх будь-якої програми, де є активне поле для введення тексту.
 - **Швидкість та точність:** Оптимізовано під розпізнавання української мови на CPU.
+- **Історія транскрипцій:** Зручне вікно для перегляду та повторного копіювання текстів за подвійним кліком.
 
 ---
 
@@ -115,6 +116,7 @@ You can download ready-to-use binaries on the **[GitHub Releases](https://github
 - **100% Local:** Your voice data never leaves your device. On first launch, the required model is downloaded locally from Hugging Face (`C:\Users\<User>\.cache\huggingface\hub\...`).
 - **Global Hotkeys:** Works system-wide on top of any active input field.
 - **Speed & Accuracy:** Optimized specifically for Ukrainian speech recognition on CPU.
+- **Transcription history:** Convenient window for viewing and copying text again with a double-click.
 
 ---
 
