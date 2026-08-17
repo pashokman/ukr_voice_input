@@ -3,7 +3,6 @@
 <p align="center">
   <img src="https://img.shields.io/badge/OS-Windows-blue?style=flat&logo=windows" alt="OS Windows">
   <img src="https://img.shields.io/badge/Python-3.8%2B-blue?style=flat&logo=python" alt="Python Version">
-  <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License">
   <a href="https://github.com/pashokman/ukr_voice_input/stargazers"><img src="https://img.shields.io/github/stars/pashokman/ukr_voice_input?style=social" alt="GitHub Stars"></a>
 </p>
 
@@ -21,7 +20,7 @@
 
 ### 📦 Релізи та Версії Моделей (Releases)
 
-Завантажити готову збірку програми можна на сторінці **[GitHub Releases](https://github.com/pashokman/ukr_voice_input/releases/latest)**.
+Завантажити готову збірку програми можна на сторінці **[GitHub Releases](https://github.com/pashokman/ukr_voice_input/releases/)**.
 
 | Модель | Рекомендовано для | Споживання ОЗП (RAM) | Параметр у `config.py` |
 | :--- | :--- | :--- | :--- |
@@ -67,7 +66,7 @@
 
 ### ⌨️ Використання
 
-1. Клацніть мишкою у будь-яке поле для введення тексту (наприклад, чат Telegram чи документ Word).
+1. Клацніть мишкою у будь-яке поле для введення тексту (наприклад, чат з ШІ чи документ Word).
 2. Натисніть **`Ctrl` + `Space`** для початку запису.
 3. Продиктуйте текст українською мовою.
 4. Натисніть **`Ctrl` + `Space`** знову, щоб завершити запис.
@@ -93,7 +92,7 @@
 
 ## 🇬🇧 English
 
-**Ukrainian Voice Input** is a lightweight and fully local Windows utility that allows you to input text using your voice in Ukrainian into any active window (Word, Telegram, browser, Notepad, etc.). Complete privacy with no audio sent to third-party servers, powered by Whisper AI models running entirely on the CPU.
+**Ukrainian Voice Input** is a lightweight and fully local Windows utility that allows you to input text using your voice in Ukrainian into any active window (Word, any messenger, browser, Notepad, etc.). Complete privacy with no audio sent to third-party servers, powered by Whisper AI models running entirely on the CPU.
 
 > 💡 **Why CPU?** While running larger models on GPUs is faster and offers higher precision, CPU execution was intentionally chosen due to the ongoing full-scale war started by russia — aiming for lower power consumption and ensuring accessibility on systems without dedicated GPUs.
 
@@ -101,7 +100,7 @@
 
 ### 📦 Releases & Model Versions
 
-You can download ready-to-use binaries on the **[GitHub Releases](https://github.com/pashokman/ukr_voice_input/releases/latest)** page.
+You can download ready-to-use binaries on the **[GitHub Releases](https://github.com/pashokman/ukr_voice_input/releases/)** page.
 
 | Model | Recommended For | RAM Consumption | Setting in `config.py` |
 | :--- | :--- | :--- | :--- |
@@ -147,7 +146,7 @@ You can download ready-to-use binaries on the **[GitHub Releases](https://github
 
 ### ⌨️ Usage
 
-1. Focus on any text input area (e.g., Telegram chat, Word document, search bar).
+1. Focus on any text input area (e.g., AI chat, Word document, search bar).
 2. Press **`Ctrl` + `Space`** to start recording.
 3. Dictate your text in Ukrainian.
 4. Press **`Ctrl` + `Space`** again to stop recording.

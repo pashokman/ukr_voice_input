@@ -59,7 +59,7 @@ def log_transcription(text):
 
 
 def resource_path(relative_path):
-    """Returns the absolute path to the file (for normal execution and for PyInstaller)"""
+    """Returns the absolute path to the file (for normal execution and for PyInstaller)."""
     try:
         if hasattr(sys, "_MEIPASS"):
             return os.path.join(sys._MEIPASS, relative_path)
