@@ -17,6 +17,19 @@ class HistoryWindow(tk.Toplevel):
         self._setup_ui()
         self._check_for_new_logs()
 
+    def _on_ctrl_c(self, event=None):
+        # Перевіряємо: якщо це подія клавіатури, то обробляємо тільки клавішу 'C' (keycode 67 у Windows)
+        if event:
+            # keycode 67 відповідає фізичній клавіші 'C' / 'С' на клавіатурі
+            # keysym 'c' або 'C' покриває випадок англійської розкладки
+            if event.keycode == 67 or event.keysym.lower() == "c":
+                self.copy_selected()
+                return "break"
+            return  # Якщо натиснуто Ctrl + інша клавіша (наприклад Ctrl+A), не перехоплюємо її
+
+        self.copy_selected()
+        return "break"
+
     def _setup_ui(self):
         btn_frame = ttk.Frame(self, padding=10)
         btn_frame.pack(side=tk.BOTTOM, fill=tk.X)
@@ -37,7 +50,16 @@ class HistoryWindow(tk.Toplevel):
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         self.text_area.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
+        # Копіювання подвійним кліком
         self.text_area.bind("<Double-Button-1>", self.copy_selected)
+
+        # 1. Англійська розкладка (Ctrl+C / Ctrl+c)
+        self.text_area.bind("<Control-c>", self._on_ctrl_c)
+        self.text_area.bind("<Control-C>", self._on_ctrl_c)
+
+        # 2. Універсальна обробка натискання будь-якої клавіші для перевірки KeyCode / Cyrillic
+        self.text_area.bind("<Control-KeyPress>", self._on_ctrl_c)
+
         self.text_area.config(state=tk.DISABLED)
 
         copy_btn = ttk.Button(btn_frame, text="Копіювати текст", command=self.copy_selected)

@@ -5,3 +5,4 @@ numpy
 pystray
 Pillow
 pyperclip
+pynput

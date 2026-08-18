@@ -1,7 +1,7 @@
 import threading
-import keyboard
 import pystray
 from PIL import Image
+from pynput import keyboard
 
 from utils.paths import resource_path
 from utils.logger import log_error
@@ -17,6 +17,7 @@ class TrayApplication:
 
         self.history_window = None
         self.icon = None
+        self.hotkey_listener = None
 
     def _load_tray_icon(self):
         try:
@@ -29,6 +30,11 @@ class TrayApplication:
     def open_history_window(self):
         try:
             if self.history_window is not None and self.history_window.winfo_exists():
+                # Якщо вікно згорнуте на панель задач, розгортаємо його
+                if self.history_window.state() == "iconic":
+                    self.history_window.deiconify()
+
+                # Піднімаємо вікно поверх інших та фокусуємося на ньому
                 self.history_window.lift()
                 self.history_window.focus_force()
                 return
@@ -43,9 +49,17 @@ class TrayApplication:
             return
         self.recorder.toggle_recording()
 
+    def _start_hotkey_listener(self):
+        """Ініціалізує та запускає слухач клавіш у фоні через pynput."""
+        try:
+            self.hotkey_listener = keyboard.GlobalHotKeys({"<ctrl>+<space>": self._toggle_recording_safe})
+            self.hotkey_listener.start()
+        except Exception as e:
+            log_error("start_hotkey_listener", e)
+
     def run_in_background(self):
         # Налаштування гарячої клавіші
-        keyboard.add_hotkey("ctrl+space", self._toggle_recording_safe, suppress=True)
+        self._start_hotkey_listener()
 
         # Контекстне меню трею
         menu = pystray.Menu(
@@ -61,8 +75,13 @@ class TrayApplication:
 
     def _on_exit(self, icon, item):
         try:
+            # Зупиняємо слухач клавіш, щоб потік коректно завершився
+            if self.hotkey_listener:
+                self.hotkey_listener.stop()
+
             if self.icon:
                 self.icon.stop()
+
             self.on_exit_callback()
             self.root.after(0, self.root.destroy)
         except Exception as e:
