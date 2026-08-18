@@ -1,9 +1,7 @@
-import sys
 import os
 import time
 import queue
 import threading
-import traceback
 import tkinter as tk
 from tkinter import messagebox, ttk
 
@@ -19,12 +17,14 @@ from config import (
     CPU_THREADS,
     CHUNK,
     LOG_FILE,
-    ERROR_LOG_FILE,
     MODEL_NAME,
     SAMPLE_RATE,
     TRANSCRIBE_SETTINGS_FOR_MEDIUM_MODEL,
     TRANSCRIBE_SETTINGS_FOR_SMALL_MODEL,
 )
+
+from utils.logger import log_error, log_transcription
+from utils.paths import resource_path
 
 transcription_queue = queue.Queue()
 is_recording = False
@@ -34,44 +34,9 @@ model = None  # Model will be initialized in the background
 audio = None
 
 
-def log_error(context, exception):
-    """Centralized error logging to error_log.txt with a stack trace."""
-    timestamp = time.strftime("[%H:%M:%S %d-%m-%Y]")
-    error_msg = f"{timestamp} [{context}] {type(exception).__name__}: {exception}\n"
-    error_msg += traceback.format_exc() + "\n" + "-" * 50 + "\n"
-
-    try:
-        with open(ERROR_LOG_FILE, "a", encoding="utf-8") as f:
-            f.write(error_msg)
-    except Exception as e:
-        print(f"Failed to log error to file: {e}")
-
-
-def log_transcription(text):
-    """Saves the transcribed text to a file with a timestamp."""
-    try:
-        timestamp = time.strftime("[%H:%M:%S %d-%m-%Y]")
-        entry = f"{timestamp} {text}\n"
-        with open(LOG_FILE, "a", encoding="utf-8") as f:
-            f.write(entry)
-    except Exception as e:
-        log_error("log_transcription", e)
-
-
-def resource_path(relative_path):
-    """Returns the absolute path to the file (for normal execution and for PyInstaller)."""
-    try:
-        if hasattr(sys, "_MEIPASS"):
-            return os.path.join(sys._MEIPASS, relative_path)
-        return os.path.join(os.path.abspath("."), relative_path)
-    except Exception as e:
-        log_error("resource_path", e)
-        return relative_path
-
-
 def load_tray_icon():
     try:
-        icon_path = resource_path("icon.ico")
+        icon_path = resource_path("assets/icon.ico")
         return Image.open(icon_path)
     except Exception as e:
         log_error("load_tray_icon", e)
