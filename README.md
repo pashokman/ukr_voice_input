@@ -16,6 +16,15 @@
 
 > 💡 **Чому CPU?** На GPU можна запускати точніші моделі і вони працюватимуть швидше. Проте цей підхід обрано свідомо через повномасштабну війну, яку розпочала росія, — для забезпечення мінімального споживання електроенергії та можливості використання на ПК без дискретної відеокарти.
 
+<details>
+<summary>📸 <b>Переглянути скріншот інтерфейсу</b></summary>
+
+<br>
+
+![Demo Preview](assets/demo.png)
+
+</details>
+
 ---
 
 ### 📦 Релізи та Версії Моделей (Releases)
@@ -24,7 +33,7 @@
 
 | Модель | Рекомендовано для | Споживання ОЗП (RAM) | Параметр у `config.py` |
 | :--- | :--- | :--- | :--- |
-| **Small** *(за замовчуванням)* | Слабопотужні CPU | < 500 MB | `MODEL_NAME = "small"` |
+| **Small** *(за замовчуванням)* | Слабкі/Застарілі CPU | < 500 MB | `MODEL_NAME = "small"` |
 | **Medium** | Сучасні CPU | < 1.6 GB | `MODEL_NAME = "medium"` |
 
 *Примітка: Усі інші параметри конфігурації однакові для обох моделей, за винятком `TRANSCRIBE_SETTINGS`.*
@@ -55,6 +64,8 @@
 
 1. **Клонуйте репозиторій:**
    `git clone https://github.com/pashokman/ukr_voice_input.git`
+
+2. **Перейти до теки проекту:**
    `cd ukr_voice_input`
 
 2. **Встановіть залежності:**
@@ -97,6 +108,15 @@
 
 > 💡 **Why CPU?** While running larger models on GPUs is faster and offers higher precision, CPU execution was intentionally chosen due to the ongoing full-scale war started by russia — aiming for lower power consumption and ensuring accessibility on systems without dedicated GPUs.
 
+<details>
+<summary>📸 <b>See the interface screenshot</b></summary>
+
+<br>
+
+![Demo Preview](assets/demo.png)
+
+</details>
+
 ---
 
 ### 📦 Releases & Model Versions
@@ -136,12 +156,14 @@ You can download ready-to-use binaries on the **[GitHub Releases](https://github
 
 1. **Clone the repository:**
    `git clone https://github.com/pashokman/ukr_voice_input.git`
+
+2. **Switch to project directory:**
    `cd ukr_voice_input`
 
-2. **Install dependencies:**
+3. **Install dependencies:**
    `pip install -r requirements.txt`
 
-3. **Run the application:**
+4. **Run the application:**
    `python transcribe_voice.py`
 
 ---
