@@ -72,7 +72,7 @@
    `pip install -r requirements.txt`
 
 3. **Запустіть утиліту:**
-   `python transcribe_voice.py`
+   `python main.py`
 
 ---
 
@@ -164,7 +164,7 @@ You can download ready-to-use binaries on the **[GitHub Releases](https://github
    `pip install -r requirements.txt`
 
 4. **Run the application:**
-   `python transcribe_voice.py`
+   `python main.py`
 
 ---
 
